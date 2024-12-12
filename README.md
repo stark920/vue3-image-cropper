@@ -1,39 +1,39 @@
 # vue3-image-cropper
 
-This template should help get you started developing with Vue 3 in Vite.
+This repository is based on Vue3 (Composition API) + TypeScript + Tailwind.css, inspired by [shadcn-vue](https://www.shadcn-vue.com/) and [VueUse](https://vueuse.org/).
 
-## Recommended IDE Setup
+## Installation
 
-[VSCode](https://code.visualstudio.com/) + [Volar](https://marketplace.visualstudio.com/items?itemName=Vue.volar) (and disable Vetur).
+Just copy files from the directory which named as [**ImageCropper**](https://github.com/stark920/vue3-image-cropper/tree/main/src/components/imageCropper) inside this repository.
 
-## Type Support for `.vue` Imports in TS
+All components css class name are using tailwind.css, make sure your project has install this package(or UnoCSS).
 
-TypeScript cannot handle type information for `.vue` imports by default, so we replace the `tsc` CLI with `vue-tsc` for type checking. In editors, we need [Volar](https://marketplace.visualstudio.com/items?itemName=Vue.volar) to make the TypeScript language service aware of `.vue` types.
+## Examples
 
-## Customize configuration
+### Basic Usage
 
-See [Vite Configuration Reference](https://vite.dev/config/).
+**your-component.vue**
 
-## Project Setup
+```javascript
+// scripts part
+import { ImageCropper } from '@/components/[where-your-store-components]/imageCropper'
 
-```sh
-bun install
+const imageCropper = ref<typeof ImageCropper>()
+const picSource: ShallowRef<string> = shallowRef('')
+const result: ShallowRef<string> = shallowRef('')
+const handleCrop = () => imageCropper.value?.handleCrop()
+const onCropped = (url: string) => (result.value = url)
+
+// template part, given the section size by yourself
+<ImageCropper
+  :base-image="picSource"
+  class="aspect-video"
+  ref="imageCropper"
+  @cropped="onCropped"
+/>
+<button @click="handleCrop">Crop It</button>
 ```
 
-### Compile and Hot-Reload for Development
+---
 
-```sh
-bun dev
-```
-
-### Type-Check, Compile and Minify for Production
-
-```sh
-bun run build
-```
-
-### Lint with [ESLint](https://eslint.org/)
-
-```sh
-bun lint
-```
+License MIT
