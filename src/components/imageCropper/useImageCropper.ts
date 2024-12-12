@@ -167,12 +167,56 @@ export function useImageCropper(
     }
   }
 
+  // Touch event handlers
+const touchstart = (e: TouchEvent) => {
+  e.stopPropagation()
+  e.preventDefault()
+
+  if (e.target !== imageBox.value) return
+
+  const touch = e.touches[0]
+  mouseState.value.draggable = true
+  mouseState.value.mouseX = touch.clientX
+  mouseState.value.mouseY = touch.clientY
+}
+
+const touchmove = (e: TouchEvent) => {
+  e.stopPropagation()
+  e.preventDefault()
+
+  if (!mouseState.value.draggable) return
+
+  const touch = e.touches[0]
+  transform.value.x += touch.clientX - mouseState.value.mouseX
+  transform.value.y += touch.clientY - mouseState.value.mouseY
+  mouseState.value.mouseX = touch.clientX
+  mouseState.value.mouseY = touch.clientY
+}
+
+const touchend = (e: TouchEvent) => {
+  e.stopPropagation()
+  e.preventDefault()
+
+  mouseState.value.draggable = false
+}
+
+const touchcancel = (e: TouchEvent) => {
+  e.stopPropagation()
+  e.preventDefault()
+
+  mouseState.value.draggable = false
+}
+
   const cropperEvents = {
     mousedown,
     mousemove,
     mouseup,
     mouseleave,
     wheel,
+    touchstart,
+    touchmove,
+    touchend,
+    touchcancel
   }
 
   return {
