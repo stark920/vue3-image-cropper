@@ -77,7 +77,7 @@ The default template has 2 slot props, **fn** provide Functions, **state** provi
 
 You can add other component by this template (ex: Drag and resizable element to change stencil size), the component will align in the center.
 
-### Extra Components
+## Extra Components
 
 ```js
 import {
