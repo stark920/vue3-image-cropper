@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, shallowRef, type ShallowRef } from 'vue'
+import SampleImage from '@/assets/sample.jpg'
 import { useColorMode } from '@vueuse/core'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -20,7 +21,7 @@ useColorMode()
 const imageCropper = ref<typeof ImageCropper>()
 const stencilWidth = ref<number>(200)
 const stencilHeight = ref<number>(200)
-const src: ShallowRef<string> = shallowRef('')
+const src: ShallowRef<string> = shallowRef(SampleImage)
 const result: ShallowRef<string> = shallowRef('')
 const handleCrop = () => imageCropper.value?.handleCrop()
 const onCropped = (url: string) => (result.value = url)
@@ -86,19 +87,29 @@ const onFileUploaded = (e: Event) => {
             width: stencilWidth,
             height: stencilHeight,
           }"
-          class="aspect-video"
+          :scale="{
+            min: 0.1,
+            max: 2,
+          }"
+          class="aspect-[4/3] lg:aspect-video"
           ref="imageCropper"
           @cropped="onCropped"
+          @error="
+            (e) => {
+              console.log(e)
+            }
+          "
         >
           <ImageCropperZoomButton @zoom-in="fn.zoomIn" @zoom-out="fn.zoomOut" />
           <small class="absolute right-2 bottom-2 text-foreground bg-background/50 rounded-md px-1">
             {{ state.nowScale }}x
           </small>
           <ImageCropperSlider
-            class="bottom-2"
+            class="bottom-2 w-3/5"
             :value="state.nowScale"
             :min="state.minScale"
             :max="state.maxScale"
+            :step="0.05"
             @change="fn.setZoom"
           />
         </ImageCropper>
@@ -107,7 +118,7 @@ const onFileUploaded = (e: Event) => {
 
       <div>
         <Label>3. Result</Label>
-        <img v-if="result !== ''" :src="result" alt="cropped result" />
+        <img v-if="result !== ''" :src="result" class="mx-auto" alt="cropped result" />
       </div>
     </div>
   </div>

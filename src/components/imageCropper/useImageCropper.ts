@@ -1,6 +1,5 @@
 import { computed, ref, shallowRef, toValue } from 'vue'
-import type { Ref } from 'vue'
-import type { MaybeRef } from 'vue'
+import type { Ref, MaybeRef } from 'vue'
 
 export interface ImageCropperOptions {
   stencil: {
@@ -16,6 +15,7 @@ export interface ImageCropperOptions {
 export function useImageCropper(
   imageBox: Ref<HTMLDivElement | null>,
   option: MaybeRef<ImageCropperOptions>,
+  errorHandler?: (e: Event) => void,
 ) {
   // Background image source
   const image = new Image()
@@ -26,9 +26,13 @@ export function useImageCropper(
     resetZoom()
     imageWidth.value = image.width
     imageHeight.value = image.height
-    if (imageBox.value && imageBox.value.children.length > 0) return
+    if (imageBox.value?.firstChild) return
     imageBox.value?.appendChild(image)
   })
+  image.addEventListener('error', (e) => {
+    if (errorHandler) errorHandler(e)
+  })
+
   const loadSrc = (src: string) => {
     if (src.length === 0) return
     image.src = src
@@ -82,12 +86,14 @@ export function useImageCropper(
   }
 
   // Generate cropped image
-  const getCroppedImageDataUrl = () => {
+  const getCroppedImageDataUrl = (): string | null => {
+    const canvas = document.createElement('canvas')
+    const context = canvas.getContext('2d')
+    if (!context) return null
+
     const { width: cropperWidth, height: cropperHeight } = toValue(option).stencil
     const { x, y, scale } = transform.value
 
-    const canvas = document.createElement('canvas')
-    const context = canvas.getContext('2d')
     canvas.width = cropperWidth
     canvas.height = cropperHeight
 
@@ -99,7 +105,7 @@ export function useImageCropper(
     const dWidth = imageWidth.value * scale
     const dHeight = imageHeight.value * scale
 
-    context?.drawImage(image, sx, sy, imageWidth.value, imageHeight.value, 0, 0, dWidth, dHeight)
+    context.drawImage(image, sx, sy, imageWidth.value, imageHeight.value, 0, 0, dWidth, dHeight)
 
     return canvas.toDataURL('image/png')
   }

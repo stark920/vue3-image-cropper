@@ -1,17 +1,9 @@
 <script setup lang="ts">
 import { onMounted, watch, ref, computed } from 'vue'
-import { useImageCropper } from './useImageCropper'
+import { useImageCropper, type ImageCropperOptions } from './useImageCropper'
 
-interface Props {
+interface Props extends Partial<ImageCropperOptions> {
   src: string
-  stencil?: {
-    width: number
-    height: number
-  }
-  scale?: {
-    min: number
-    max: number
-  }
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -27,6 +19,7 @@ const props = withDefaults(defineProps<Props>(), {
 
 const emits = defineEmits<{
   cropped: [imgDataUrl: string]
+  error: [e: Event]
 }>()
 
 const imageBox = ref<HTMLDivElement | null>(null)
@@ -34,6 +27,8 @@ const options = computed(() => {
   const { stencil, scale } = props
   return { stencil, scale }
 })
+const errorHandler = (e: Event) => emits('error', e)
+
 const {
   transformStyle,
   cropperEvents,
@@ -43,10 +38,11 @@ const {
   setZoom,
   zoomIn,
   zoomOut,
-} = useImageCropper(imageBox, options)
+} = useImageCropper(imageBox, options, errorHandler)
 
 const handleCrop = () => {
   const croppedImage = getCroppedImageDataUrl()
+  if (!croppedImage) return
   emits('cropped', croppedImage)
 }
 
@@ -61,10 +57,7 @@ defineExpose({ handleCrop })
 </script>
 
 <template>
-  <div
-    class="relative bg-accent overflow-hidden"
-    :class="!src.length && 'pointer-events-none'"
-  >
+  <div class="relative bg-accent overflow-hidden" :class="!src.length && 'pointer-events-none'">
     <div v-on="cropperEvents" class="size-full cursor-move"></div>
     <div
       class="absolute pointer-events-none select-none origin-center size-max"
