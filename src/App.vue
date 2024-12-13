@@ -47,7 +47,7 @@ const onFileUploaded = (e: Event) => {
 
 <template>
   <div class="h-screen bg-background">
-    <div class="container grid items-center gap-8 max-w-xl pt-6">
+    <div class="container grid items-center gap-8 max-w-xl py-6">
       <form ref="uploadForm">
         <Label for="picture">1. Upload Picture</Label>
         <Input
@@ -86,10 +86,6 @@ const onFileUploaded = (e: Event) => {
           :stencil="{
             width: stencilWidth,
             height: stencilHeight,
-          }"
-          :scale="{
-            min: 0.1,
-            max: 2,
           }"
           class="aspect-[4/3] lg:aspect-video"
           ref="imageCropper"

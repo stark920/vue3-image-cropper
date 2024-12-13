@@ -104,7 +104,7 @@ export function useImageCropper(
 
     const dWidth = imageWidth.value * scale
     const dHeight = imageHeight.value * scale
-
+    console.log(sx, sy, imageWidth.value, imageHeight.value, 0, 0, dWidth, dHeight)
     context.drawImage(image, sx, sy, imageWidth.value, imageHeight.value, 0, 0, dWidth, dHeight)
 
     return canvas.toDataURL('image/png')
