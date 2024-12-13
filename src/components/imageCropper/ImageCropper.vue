@@ -3,48 +3,47 @@ import { onMounted, watch, ref, computed } from 'vue'
 import { useImageCropper } from './useImageCropper'
 
 interface Props {
-  baseImage: string
-  cropWidth?: number
-  cropHeight?: number
-  minScale?: number
-  maxScale?: number
+  src: string
+  stencil?: {
+    width: number
+    height: number
+  }
+  scale?: {
+    min: number
+    max: number
+  }
 }
 
 const props = withDefaults(defineProps<Props>(), {
-  cropWidth: 200,
-  cropHeight: 200,
-  minScale: 0.5,
-  maxScale: 2,
+  stencil: () => ({
+    width: 200,
+    height: 200,
+  }),
+  scale: () => ({
+    min: 0.5,
+    max: 2,
+  }),
 })
 
 const emits = defineEmits<{
   cropped: [imgDataUrl: string]
 }>()
 
-const container = ref<HTMLDivElement | null>(null)
 const imageBox = ref<HTMLDivElement | null>(null)
-
-const cropperOptions = computed(() => ({
-  scale: {
-    min: props.minScale,
-    max: props.maxScale,
-  },
-  cropper: {
-    width: props.cropWidth,
-    height: props.cropHeight,
-  },
-}))
-
+const options = computed(() => {
+  const { stencil, scale } = props
+  return { stencil, scale }
+})
 const {
   transformStyle,
   cropperEvents,
   nowScale,
-  loadBaseImage,
+  loadSrc,
   getCroppedImageDataUrl,
   setZoom,
   zoomIn,
   zoomOut,
-} = useImageCropper(container, imageBox, cropperOptions)
+} = useImageCropper(imageBox, options)
 
 const handleCrop = () => {
   const croppedImage = getCroppedImageDataUrl()
@@ -52,11 +51,11 @@ const handleCrop = () => {
 }
 
 watch(
-  () => props.baseImage,
-  (newImg) => loadBaseImage(newImg),
+  () => props.src,
+  (newImg) => loadSrc(newImg),
 )
 
-onMounted(() => loadBaseImage(props.baseImage))
+onMounted(() => loadSrc(props.src))
 
 defineExpose({ handleCrop })
 </script>
@@ -64,30 +63,26 @@ defineExpose({ handleCrop })
 <template>
   <div
     class="relative bg-accent overflow-hidden"
-    :class="!baseImage.length && 'pointer-events-none'"
-    ref="container"
+    :class="!src.length && 'pointer-events-none'"
   >
+    <div v-on="cropperEvents" class="size-full cursor-move"></div>
     <div
-      class="bg-no-repeat cursor-move origin-top-left"
+      class="absolute pointer-events-none select-none origin-center size-max"
       :style="transformStyle"
-      v-on="cropperEvents"
       ref="imageBox"
     ></div>
-
     <div
       class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 shadow-[0_0_0_2000px_rgba(0,0,0,0.3)] bg-transparent pointer-events-none"
-      :style="`width: ${cropWidth}px; height: ${cropHeight}px`"
+      :style="`width: ${stencil.width}px; height: ${stencil.height}px`"
     ></div>
 
-    <div
-      class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 shadow-[0_0_0_2000px_rgba(0,0,0,0.3)] bg-transparent pointer-events-none"
-      :style="`width: ${cropWidth}px; height: ${cropHeight}px`"
-    ></div>
-
-    <div v-if="$slots.cropper" class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
-      <slot name="cropper" />
+    <div v-if="$slots.stencil" class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
+      <slot name="stencil" />
     </div>
 
-    <slot :fn="{ setZoom, zoomIn, zoomOut }" :state="{ nowScale, minScale, maxScale }" />
+    <slot
+      :fn="{ setZoom, zoomIn, zoomOut }"
+      :state="{ nowScale, minScale: scale.min, maxScale: scale.max }"
+    />
   </div>
 </template>

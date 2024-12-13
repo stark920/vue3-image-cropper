@@ -1,23 +1,39 @@
-import { computed, ref, toValue } from 'vue'
+import { computed, ref, shallowRef, toValue } from 'vue'
 import type { Ref } from 'vue'
 import type { MaybeRef } from 'vue'
 
 export interface ImageCropperOptions {
+  stencil: {
+    width: number
+    height: number
+  }
   scale: {
     min: number
     max: number
   }
-  cropper: {
-    width: number
-    height: number
-  }
 }
 
 export function useImageCropper(
-  container: Ref<HTMLDivElement | null>,
   imageBox: Ref<HTMLDivElement | null>,
   option: MaybeRef<ImageCropperOptions>,
 ) {
+  // Background image source
+  const image = new Image()
+  const imageWidth = shallowRef<number>(0)
+  const imageHeight = shallowRef<number>(0)
+
+  image.addEventListener('load', () => {
+    resetZoom()
+    imageWidth.value = image.width
+    imageHeight.value = image.height
+    if (imageBox.value && imageBox.value.children.length > 0) return
+    imageBox.value?.appendChild(image)
+  })
+  const loadSrc = (src: string) => {
+    if (src.length === 0) return
+    image.src = src
+  }
+
   // Background image transform styles
   const transform = ref({
     x: 0,
@@ -25,33 +41,38 @@ export function useImageCropper(
     scale: 1,
   })
   const nowScale = computed(() => transform.value.scale)
-  const transformStyle = computed(
-    () =>
-      `transform: translate(${transform.value.x}px, ${transform.value.y}px) scale(${transform.value.scale});`,
-  )
 
-  const zoomIn = (range = 0.1) => {
+  const transformStyle = computed(() => {
+    const { x, y, scale } = transform.value
+    return {
+      top: `calc(50% - ${imageHeight.value / 2}px)`,
+      left: `calc(50% - ${imageWidth.value / 2}px)`,
+      transform: `translate(${x}px, ${y}px) scale(${scale})`,
+    }
+  })
+
+  const zoomIn = (magnification = 0.05) => {
     const { max } = toValue(option).scale
     if (transform.value.scale >= max) return
 
-    const adjustment = (transform.value.scale + range).toFixed(2)
+    const adjustment = (transform.value.scale * (1 + magnification)).toFixed(2)
     const result = parseFloat(adjustment)
     transform.value.scale = result > max ? max : result
   }
 
-  const zoomOut = (range = 0.1) => {
+  const zoomOut = (magnification = 0.05) => {
     const { min } = toValue(option).scale
     if (transform.value.scale <= min) return
 
-    const adjustment = (transform.value.scale - range).toFixed(2)
+    const adjustment = (transform.value.scale * (1 - magnification)).toFixed(2)
     const result = parseFloat(adjustment)
     transform.value.scale = result < min ? min : result
   }
 
-  const setZoom = (ratio: number) => {
+  const setZoom = (scale: number) => {
     const { min, max } = toValue(option).scale
-    if (ratio < min || ratio > max) return
-    transform.value.scale = ratio
+    if (scale < min || scale > max) return
+    transform.value.scale = scale
   }
 
   const resetZoom = () => {
@@ -60,45 +81,25 @@ export function useImageCropper(
     transform.value.scale = 1
   }
 
-  // Background image source
-  const image = new Image()
-  image.addEventListener('load', () => {
-    if (!imageBox.value) return
-    imageBox.value.style.width = `${image.width}px`
-    imageBox.value.style.height = `${image.height}px`
-    imageBox.value.style.backgroundImage = `url(${image.src})`
-    resetZoom()
-  })
-  const loadBaseImage = (src: string) => {
-    if (src.length === 0) return
-    image.src = src
-  }
-
   // Generate cropped image
   const getCroppedImageDataUrl = () => {
-    const { width: cropperWidth, height: cropperHeight } = toValue(option).cropper
+    const { width: cropperWidth, height: cropperHeight } = toValue(option).stencil
+    const { x, y, scale } = transform.value
+
     const canvas = document.createElement('canvas')
     const context = canvas.getContext('2d')
     canvas.width = cropperWidth
     canvas.height = cropperHeight
 
-    // source image size
-    const sWidth = image.width
-    const sHeight = image.height
+    const offsetX = (imageWidth.value * scale) / 2 - cropperWidth / 2
+    const offsetY = (imageHeight.value * scale) / 2 - cropperHeight / 2
+    const sx = (offsetX - x) / scale
+    const sy = (offsetY - y) / scale
 
-    // destination image size
-    const dWidth = sWidth * transform.value.scale
-    const dHeight = sHeight * transform.value.scale
+    const dWidth = imageWidth.value * scale
+    const dHeight = imageHeight.value * scale
 
-    // adjustment
-    const sx =
-      (transform.value.x - (container.value?.clientWidth ?? 0) / 2 + cropperWidth / 2) /
-      transform.value.scale
-    const sy =
-      (transform.value.y - (container.value?.clientHeight ?? 0) / 2 + cropperHeight / 2) /
-      transform.value.scale
-
-    context?.drawImage(image, -sx, -sy, sWidth, sHeight, 0, 0, dWidth, dHeight)
+    context?.drawImage(image, sx, sy, imageWidth.value, imageHeight.value, 0, 0, dWidth, dHeight)
 
     return canvas.toDataURL('image/png')
   }
@@ -111,22 +112,15 @@ export function useImageCropper(
   })
 
   const mousedown = (e: MouseEvent) => {
-    e.stopPropagation()
     e.preventDefault()
-
-    if (e.target !== imageBox.value) return
-
     mouseState.value.draggable = true
     mouseState.value.mouseX = e.clientX
     mouseState.value.mouseY = e.clientY
   }
 
   const mousemove = (e: MouseEvent) => {
-    e.stopPropagation()
     e.preventDefault()
-
     if (!mouseState.value.draggable) return
-
     transform.value.x += e.clientX - mouseState.value.mouseX
     transform.value.y += e.clientY - mouseState.value.mouseY
     mouseState.value.mouseX = e.clientX
@@ -134,32 +128,25 @@ export function useImageCropper(
   }
 
   const mouseup = (e: MouseEvent) => {
-    e.stopPropagation()
     e.preventDefault()
-
     mouseState.value.draggable = false
   }
 
   const windowMouseUp = (e: MouseEvent) => {
-    e.stopPropagation()
     e.preventDefault()
-
     mouseState.value.draggable = false
-
     window.removeEventListener('mouseup', windowMouseUp)
     window.removeEventListener('mousemove', mousemove)
   }
 
   const mouseleave = () => {
     if (!mouseState.value.draggable) return
-
     window.addEventListener('mouseup', windowMouseUp)
     window.addEventListener('mousemove', mousemove)
   }
 
   const wheel = (e: WheelEvent) => {
     e.preventDefault()
-
     if (e.deltaY < 0) {
       zoomIn()
     } else {
@@ -167,45 +154,38 @@ export function useImageCropper(
     }
   }
 
+  const contextmenu = () => {
+    mouseState.value.draggable = false
+  }
+
   // Touch event handlers
-const touchstart = (e: TouchEvent) => {
-  e.stopPropagation()
-  e.preventDefault()
+  const touchstart = (e: TouchEvent) => {
+    e.preventDefault()
+    const touch = e.touches[0]
+    mouseState.value.draggable = true
+    mouseState.value.mouseX = touch.clientX
+    mouseState.value.mouseY = touch.clientY
+  }
 
-  if (e.target !== imageBox.value) return
+  const touchmove = (e: TouchEvent) => {
+    e.preventDefault()
+    if (!mouseState.value.draggable) return
+    const touch = e.touches[0]
+    transform.value.x += touch.clientX - mouseState.value.mouseX
+    transform.value.y += touch.clientY - mouseState.value.mouseY
+    mouseState.value.mouseX = touch.clientX
+    mouseState.value.mouseY = touch.clientY
+  }
 
-  const touch = e.touches[0]
-  mouseState.value.draggable = true
-  mouseState.value.mouseX = touch.clientX
-  mouseState.value.mouseY = touch.clientY
-}
+  const touchend = (e: TouchEvent) => {
+    e.preventDefault()
+    mouseState.value.draggable = false
+  }
 
-const touchmove = (e: TouchEvent) => {
-  e.stopPropagation()
-  e.preventDefault()
-
-  if (!mouseState.value.draggable) return
-
-  const touch = e.touches[0]
-  transform.value.x += touch.clientX - mouseState.value.mouseX
-  transform.value.y += touch.clientY - mouseState.value.mouseY
-  mouseState.value.mouseX = touch.clientX
-  mouseState.value.mouseY = touch.clientY
-}
-
-const touchend = (e: TouchEvent) => {
-  e.stopPropagation()
-  e.preventDefault()
-
-  mouseState.value.draggable = false
-}
-
-const touchcancel = (e: TouchEvent) => {
-  e.stopPropagation()
-  e.preventDefault()
-
-  mouseState.value.draggable = false
-}
+  const touchcancel = (e: TouchEvent) => {
+    e.preventDefault()
+    mouseState.value.draggable = false
+  }
 
   const cropperEvents = {
     mousedown,
@@ -213,17 +193,18 @@ const touchcancel = (e: TouchEvent) => {
     mouseup,
     mouseleave,
     wheel,
+    contextmenu,
     touchstart,
     touchmove,
     touchend,
-    touchcancel
+    touchcancel,
   }
 
   return {
     transformStyle,
     cropperEvents,
     nowScale,
-    loadBaseImage,
+    loadSrc,
     getCroppedImageDataUrl,
     zoomIn,
     zoomOut,

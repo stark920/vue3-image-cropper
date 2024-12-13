@@ -18,9 +18,9 @@ useColorMode()
 
 // Image Cropper
 const imageCropper = ref<typeof ImageCropper>()
-const cropWidth = ref<number>(200)
-const cropHeight = ref<number>(200)
-const picSource: ShallowRef<string> = shallowRef('')
+const stencilWidth = ref<number>(200)
+const stencilHeight = ref<number>(200)
+const src: ShallowRef<string> = shallowRef('')
 const result: ShallowRef<string> = shallowRef('')
 const handleCrop = () => imageCropper.value?.handleCrop()
 const onCropped = (url: string) => (result.value = url)
@@ -37,7 +37,7 @@ const onFileUploaded = (e: Event) => {
   reader.onload = (e) => {
     if (!e.target || typeof e.target.result !== 'string') return
 
-    picSource.value = e.target.result
+    src.value = e.target.result
     uploadForm.value?.reset()
   }
   reader.readAsDataURL(file)
@@ -61,7 +61,7 @@ const onFileUploaded = (e: Event) => {
       <div class="grid gap-2">
         <Label>2. Preview + Cropper</Label>
         <div class="grid gap-4 w-max my-4">
-          <NumberField v-model="cropWidth">
+          <NumberField v-model="stencilWidth">
             <Label>Crop Width</Label>
             <NumberFieldContent>
               <NumberFieldDecrement />
@@ -69,7 +69,7 @@ const onFileUploaded = (e: Event) => {
               <NumberFieldIncrement />
             </NumberFieldContent>
           </NumberField>
-          <NumberField v-model="cropHeight">
+          <NumberField v-model="stencilHeight">
             <Label>Crop Height</Label>
             <NumberFieldContent>
               <NumberFieldDecrement />
@@ -78,31 +78,31 @@ const onFileUploaded = (e: Event) => {
             </NumberFieldContent>
           </NumberField>
         </div>
+
         <ImageCropper
-          :base-image="picSource"
-          :crop-width
-          :crop-height
+          v-slot="{ fn, state }"
+          :src
+          :stencil="{
+            width: stencilWidth,
+            height: stencilHeight,
+          }"
           class="aspect-video"
           ref="imageCropper"
           @cropped="onCropped"
         >
-          <template #default="{ fn, state }">
-            <ImageCropperZoomButton @zoom-in="fn.zoomIn" @zoom-out="fn.zoomOut" />
-            <small
-              class="absolute right-2 bottom-2 text-foreground bg-background/50 rounded-md px-1"
-            >
-              {{ state.nowScale }}x
-            </small>
-            <ImageCropperSlider
-              class="bottom-2"
-              :value="state.nowScale"
-              :min="state.minScale"
-              :max="state.maxScale"
-              @change="fn.setZoom"
-            />
-          </template>
+          <ImageCropperZoomButton @zoom-in="fn.zoomIn" @zoom-out="fn.zoomOut" />
+          <small class="absolute right-2 bottom-2 text-foreground bg-background/50 rounded-md px-1">
+            {{ state.nowScale }}x
+          </small>
+          <ImageCropperSlider
+            class="bottom-2"
+            :value="state.nowScale"
+            :min="state.minScale"
+            :max="state.maxScale"
+            @change="fn.setZoom"
+          />
         </ImageCropper>
-        <Button :disabled="picSource === ''" variant="outline" @click="handleCrop">Crop It</Button>
+        <Button :disabled="src === ''" variant="outline" @click="handleCrop">Crop It</Button>
       </div>
 
       <div>
