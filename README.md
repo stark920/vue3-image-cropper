@@ -2,6 +2,8 @@
 
 This repository is based on Vue 3, TypeScript, and Tailwind CSS, inspired by [shadcn-vue](https://www.shadcn-vue.com/) and [VueUse](https://vueuse.org/).
 
+The [Demo](https://vue3-image-cropper.vercel.app/) page.
+
 ## Installation
 
 To use this package, copy the files in the folder named [**ImageCropper**](https://github.com/stark920/vue3-image-cropper/tree/main/src/components/imageCropper) from this repository to the desired folder in your project. Only **ImageCropper.vue** and **useImageCropper.ts** are required.
