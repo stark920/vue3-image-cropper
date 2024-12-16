@@ -54,7 +54,7 @@ const onFileUploaded = (e: Event) => {
           id="picture"
           type="file"
           accept="image/*"
-          class="bg-slate-500 cursor-pointer hover:bg-slate-400 duration-300"
+          class="dark:bg-slate-500 cursor-pointer hover:bg-slate-400 duration-300"
           @change="onFileUploaded"
         />
       </form>
