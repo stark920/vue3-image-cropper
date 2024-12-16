@@ -1,28 +1,31 @@
 # vue3-image-cropper
 
-This repository is based on Vue3 + TypeScript + Tailwind.css, inspired by [shadcn-vue](https://www.shadcn-vue.com/) and [VueUse](https://vueuse.org/).
+This repository is based on Vue 3, TypeScript, and Tailwind CSS, inspired by [shadcn-vue](https://www.shadcn-vue.com/) and [VueUse](https://vueuse.org/).
 
 ## Installation
 
-Just copy the files in the folder named [**ImageCropper**](https://github.com/stark920/vue3-image-cropper/tree/main/src/components/imageCropper) in this project to the folder where you want to store it (Only **ImageCropper.vue** and **useImageCropper.ts** are required).
+To use this package, copy the files in the folder named [**ImageCropper**](https://github.com/stark920/vue3-image-cropper/tree/main/src/components/imageCropper) from this repository to the desired folder in your project. Only **ImageCropper.vue** and **useImageCropper.ts** are required.
 
-The css styles of all components are written using tailwind. Please make sure your project has tailwind installed(or UnoCSS).
+The CSS styles for all components are written using Tailwind CSS. Please ensure that your project has Tailwind CSS (or UnoCSS) installed.
 
 ## Examples
 
-The main component **ImageCropper.vue** exposes a **handleCrop** function to trigger crop behavior and return the cropped image dataUrl(string).
+The main component, **ImageCropper.vue**, exposes a **handleCrop** function to trigger the cropping behavior and return the cropped image as a dataURL (string).
 
-This component doesn't define the size as default. You have to add width/height or aspect-ratio (depends on parent element).
+This component does not have predefined dimensions. You must specify the width/height or aspect ratio based on the parent element.
 
 **your-component.vue**
 
 ```js
-import { ImageCropper } from '@/[your-folder]/imageCropper'
-const imageCropper = ref<typeof ImageCropper>()
-const src: ShallowRef<string> = shallowRef('')
-const result: ShallowRef<string> = shallowRef('')
-const handleCrop = () => imageCropper.value?.handleCrop()
-const onCropped = (url: string) => (result.value = url)
+import { ImageCropper } from '@/[your-folder]/imageCropper';
+
+const imageCropper = ref<typeof ImageCropper>();
+const handleCrop = () => imageCropper.value?.handleCrop();
+
+const src: ShallowRef<string> = shallowRef('');
+const result: ShallowRef<string> = shallowRef('');
+
+const onCropped = (url: string) => (result.value = url);
 ```
 
 ```html
@@ -35,47 +38,48 @@ const onCropped = (url: string) => (result.value = url)
 <button @click="handleCrop">Crop It</button>
 ```
 
-## Component Expose Function
+## Component Exposed Function
 
 | Function     | Type          | Description                        
 | ------------ | ------------- | ---------------------------------- 
-| handleCrop   | `() => void`    | Trigger crop image action
+| handleCrop   | `() => void`  | Triggers the crop action.
 
 ## Props
 
-| Prop                | Type                                              | Description             | Default
-| ------------------- | ------------------------------------------------- | ----------------------- | ----------------------------
-| src                 | `String`                                          | The cropping image      |
-| stencil (optional)  | `{ width: number, height: number }`, `undefined`  | The stencil size        | `{ width: 200, height: 200 }`
-| scale (optional)    | `{ min: number, max: number }`, `undefined`       | The scaling limitation  | `{ min: 0.5, max: 2 }`
+| Prop                | Type                                              | Description              | Default
+| ------------------- | ------------------------------------------------- | ------------------------ | ----------------------------
+| src                 | `String`                                          | The image to be cropped. |
+| stencil (optional)  | `{ width: number, height: number }`, `undefined`  | The stencil size.        | `{ width: 200, height: 200 }`
+| scale (optional)    | `{ min: number, max: number }`, `undefined`       | The scaling limits.      | `{ min: 0.5, max: 2 }`
 
 ## Emits
 
-| Event     | Description                               | Value
-| --------- | ----------------------------------------- | --------
-| cropped   | Invoked on the crop image is done         | string
+| Event     | Description                                               | Value
+| --------- | --------------------------------------------------------- | --------
+| cropped   | Triggered when the image cropping is complete.            | string
+| error     | Triggered when image loading or generation fails.         | Event
 
 ## Default template
 
-The default template has 2 slot props, **fn** provide Functions, **state** provide variables.
+The default template provides two slot props: **fn** (functions) and **state** (variables).
 
 ### fn
-| Prop      | Type                               | Description                   | Default
-| --------- | ---------------------------------- | ----------------------------- | ----------------------------
-| zoomIn    | `(magnification: number) => void`  | Zoom in                       | `0.05`
-| zoomOut   | `(magnification: number) => void`  | Zoom out                      | `0.05`
-| setZoom   | `(scale: number) => void`          | Set scale to specific number  | 
+| Function  | Type                               | Description                         | Default
+| --------- | ---------------------------------- | ----------------------------------- | ----------------------------
+| zoomIn    | `(magnification: number) => void`  | Zooms in on the image.              | `0.05`
+| zoomOut   | `(magnification: number) => void`  | Zooms out of the image.             | `0.05`
+| setZoom   | `(scale: number) => void`          | Sets the zoom to a specific value.  | 
 
 ### state
-| Prop      | Type      | Description                    
+| Variable  | Type      | Description                    
 | --------- | --------- | -------------------------------
-| nowScale  | `Number`  | Current scale value             
-| minScale  | `Number`  | Min scale value    
-| maxScale  | `Number`  | Max scale value
+| nowScale  | `Number`  | The current scale value.            
+| minScale  | `Number`  | The minimum scale value.
+| maxScale  | `Number`  | The maximum scale value.
 
 ## Stencil template
 
-You can add other component by this template (ex: Drag and resizable element to change stencil size), the component will align in the center.
+You can customize this template by adding other components, such as drag-and-resizable elements to modify the stencil size. The component will align in the center.
 
 ## Extra Components
 
@@ -92,17 +96,17 @@ import {
   v-slot="{ fn, state }"
   ...
 >
-  <!-- add zoom In/Out buttons -->
+  <!-- Add zoom in/out buttons -->
   <ImageCropperZoomButton @zoom-in="fn.zoomIn" @zoom-out="fn.zoomOut" />
 
-  <!-- add custom element -->
+  <!-- Add a custom element -->
   <small
     class="absolute right-2 bottom-2 text-foreground bg-background/50 rounded-md px-1"
   >
     {{ state.nowScale }}x
   </small>
 
-  <!-- add zoom slider -->
+  <!-- Add a zoom slider -->
   <ImageCropperSlider
     class="bottom-2"
     :value="state.nowScale"
@@ -115,4 +119,6 @@ import {
 
 ---
 
-License MIT
+## License 
+
+This project is licensed under the MIT License.

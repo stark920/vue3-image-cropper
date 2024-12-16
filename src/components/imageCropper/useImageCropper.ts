@@ -86,27 +86,30 @@ export function useImageCropper(
   }
 
   // Generate cropped image
-  const getCroppedImageDataUrl = (): string | null => {
-    const canvas = document.createElement('canvas')
-    const context = canvas.getContext('2d')
-    if (!context) return null
-
-    const { width: cropperWidth, height: cropperHeight } = toValue(option).stencil
-    const { x, y, scale } = transform.value
-
-    canvas.width = cropperWidth
-    canvas.height = cropperHeight
-
-    const offsetX = (imageWidth.value * scale) / 2 - cropperWidth / 2
-    const offsetY = (imageHeight.value * scale) / 2 - cropperHeight / 2
-    const sx = (offsetX - x) / scale
-    const sy = (offsetY - y) / scale
-
-    const dWidth = imageWidth.value * scale
-    const dHeight = imageHeight.value * scale
-    context.drawImage(image, sx, sy, imageWidth.value, imageHeight.value, 0, 0, dWidth, dHeight)
-
-    return canvas.toDataURL('image/png')
+  const getCroppedImageDataUrl = (): string | undefined => {
+    try {
+      const canvas = document.createElement('canvas')
+      const context = canvas.getContext('2d')
+  
+      const { width: cropperWidth, height: cropperHeight } = toValue(option).stencil
+      const { x, y, scale } = transform.value
+  
+      canvas.width = cropperWidth
+      canvas.height = cropperHeight
+  
+      const offsetX = (imageWidth.value * scale) / 2 - cropperWidth / 2
+      const offsetY = (imageHeight.value * scale) / 2 - cropperHeight / 2
+      const sx = (offsetX - x) / scale
+      const sy = (offsetY - y) / scale
+  
+      const dWidth = imageWidth.value * scale
+      const dHeight = imageHeight.value * scale
+      context?.drawImage(image, sx, sy, imageWidth.value, imageHeight.value, 0, 0, dWidth, dHeight)
+      
+      return canvas.toDataURL('image/png')
+    } catch (error) {
+      if (errorHandler) errorHandler(new ErrorEvent('Crop Image Error', { error }))
+    }
   }
 
   // Mouse event handlers
