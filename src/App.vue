@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, shallowRef, type ShallowRef } from 'vue'
 import SampleImage from '@/assets/sample.jpg'
+import GithubIcon from '@/components/GithubMark.vue'
 import { useColorMode } from '@vueuse/core'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -47,7 +48,17 @@ const onFileUploaded = (e: Event) => {
 
 <template>
   <div class="h-screen bg-background">
-    <div class="container grid items-center gap-8 max-w-xl py-6">
+    <div class="relative container grid items-center gap-8 max-w-xl py-6">
+      <a
+        href="https://github.com/stark920/vue3-image-cropper"
+        class="absolute top-2 right-2"
+        rel="noopener noreferrer"
+        target="_blank"
+        aria-label="Github Repository"
+      >
+        <GithubIcon class="text-white opacity-50 hover:opacity-100 size-8" />
+      </a>
+
       <form ref="uploadForm">
         <Label for="picture">1. Upload Picture</Label>
         <Input
